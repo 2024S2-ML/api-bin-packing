@@ -2,14 +2,15 @@ from io import BytesIO
 
 import uvicorn
 from fastapi import FastAPI
-from fastapi.openapi.models import Response
 from sqlalchemy import create_engine
-from sqlalchemy.dialects.mssql import IMAGE
 from sqlalchemy.orm import Session
+
 from starlette.responses import FileResponse, StreamingResponse
 
-from models import Base
+from body_dto import newTable
+from models import Base, GartmentTable
 from packing_layer import Packer
+from services import gartmentTableService
 from temp_content import get_rects, plot_bin_packing
 
 # iniciar DB
@@ -22,6 +23,15 @@ app = FastAPI()
 @app.get("/")
 def hello_world_root():
     return {"Hello": "World"}
+
+@app.post('/table/new')
+async def create_table(new_table: newTable):
+
+    tableService = gartmentTableService(engine)
+    table = tableService.newTable(new_table)
+
+    return { id: table.id }
+
 
 ## TEMP AREA
 @app.get('/pack')

@@ -15,12 +15,14 @@ class GartmentTable(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     width: Mapped[int] = mapped_column(Integer)
     height: Mapped[int] = mapped_column(Integer)
-    bin: Mapped[str] = mapped_column(String(200))
+    bin_maxrects: Mapped[int] = mapped_column(String(400), nullable=True)
+    bin_skyline: Mapped[str] = mapped_column(String(400), nullable=True)
+    bin_guillotine: Mapped[str] = mapped_column(String(400), nullable=True)
 
 class Shirt(Base):
     __tablename__ = "shirt"
     id: Mapped[int] = mapped_column(primary_key=True)
     type: Mapped[str] = mapped_column(String(50))
-    size: Mapped[str] = mapped_column(String(3))
+    size: Mapped[str] = mapped_column(String(3)) # pp p m g gg
     width: Mapped[int] = mapped_column(Integer)
     height: Mapped[int] = mapped_column(Integer)
