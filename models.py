@@ -24,5 +24,17 @@ class Shirt(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     type: Mapped[str] = mapped_column(String(50))
     size: Mapped[str] = mapped_column(String(3)) # pp p m g gg
+
+    shirtRects: Mapped[List["ShirtRects"]] = relationship(
+        back_populates = "shirt", cascade = "all, delete-orphan"
+    )
+
+class ShirtRects(Base):
+    __tablename__ = "shirt_rects"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
     width: Mapped[int] = mapped_column(Integer)
     height: Mapped[int] = mapped_column(Integer)
+    shirt_id: Mapped[str] = mapped_column(ForeignKey("shirt.id"))
+
+    shirt: Mapped["Shirt"] = relationship(Shirt, back_populates = "shirt_rects")

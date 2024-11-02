@@ -1,6 +1,8 @@
+import json
 import unittest
 from unittest import IsolatedAsyncioTestCase
 
+from matplotlib.font_manager import json_load
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
@@ -16,15 +18,14 @@ class garmentTable(IsolatedAsyncioTestCase):
         testTable.width = 800
         testTable.height = 600
 
-        # Await the asynchronous `create_table` function
-        id = await create_table(testTable)
+        id = json.loads(await create_table(testTable))
+        id = id.get("id")
 
         table: GartmentTable
         with Session(engine) as session:
-            # Assuming `get_one` is a method you've defined to fetch by ID
-            table = session.get(GartmentTable, id.get(id))
+            table = session.get(GartmentTable, id)
 
-        self.assertEqual(id, False)
+            self.assertEqual(id, table.id)
 
 if __name__ == '__main__':
     unittest.main()

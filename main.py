@@ -1,16 +1,17 @@
+import json
 from io import BytesIO
-
 import uvicorn
 from fastapi import FastAPI
 from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import Session
 
 from starlette.responses import FileResponse, StreamingResponse
 
-from body_dto import newTable
+from body_dto import newTable, addShirt
 from models import Base, GartmentTable
 from packing_layer import Packer
-from services import gartmentTableService
+from services import GartmentTableService, ShirtService, ShirtRectsService
 from temp_content import get_rects, plot_bin_packing
 
 # iniciar DB
@@ -27,11 +28,30 @@ def hello_world_root():
 @app.post('/table/new')
 async def create_table(new_table: newTable):
 
-    tableService = gartmentTableService(engine)
-    table = tableService.newTable(new_table)
+    tableService = GartmentTableService(engine)
+    tableId = tableService.newTable(new_table)
 
-    return { id: table.id }
+    return json.dumps({"id": tableId})
 
+@app.post('/table/{table_id}/add')
+async def add_rect(table_id: int, add_shirt: addShirt):
+
+    tableService = GartmentTableService(engine)
+    table = tableService.get_table(table_id)
+
+    shirtService = ShirtService(engine)
+    shirt = shirtService.get_by_size_type(add_shirt.size, add_shirt.type)
+
+    shirtRectsService = ShirtRectsService(engine)
+    shirtRects = shirtRectsService.get_by_shirtId(shirt.shirtId)
+
+    if table is not None and shirt is not None:
+        pack = Packer((table.width, table.height))
+        pack.add_rect(shirt.width, s)
+        pack.pack()
+
+
+    return json.dumps({"id": tableId})
 
 ## TEMP AREA
 @app.get('/pack')
