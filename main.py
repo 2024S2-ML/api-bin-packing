@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from starlette.responses import FileResponse, StreamingResponse
 
+from Utils import Utils
 from body_dto import newTable, addShirt
 from models import Base, GartmentTable
 from packing_layer import Packer
@@ -45,13 +46,22 @@ async def add_rect(table_id: int, add_shirt: addShirt):
     shirtRectsService = ShirtRectsService(engine)
     shirtRects = shirtRectsService.get_by_shirtId(shirt.shirtId)
 
-    if table is not None and shirt is not None:
+    if table is not None and shirt is not None and shirtRects is not None:
+        rectsList = shirtRectsService.transform_into_rects(shirtRects)
+
         pack = Packer((table.width, table.height))
-        pack.add_rect(shirt.width, s)
+        pack.add_many(rectsList)
         pack.pack()
 
+        table.bin_skyline = pack.get_packer_sky().rect_list().__str__()
+        table.bin_guillotine = pack.get_packer_gui().rect_list().__str__()
+        table.bin_maxrects = pack.get_packer_max().rect_list().__str__()
 
-    return json.dumps({"id": tableId})
+        tableService.save(table)
+
+        return Utils.mount_table_return(table)
+
+    return json.dumps({"error": "Error during the addition"})
 
 ## TEMP AREA
 @app.get('/pack')

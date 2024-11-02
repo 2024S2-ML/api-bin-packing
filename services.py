@@ -23,7 +23,11 @@ class GartmentTableService:
             width=new_table.width,
             height=new_table.height)
 
-        tabId: int
+        tabId = self.save(table)
+
+        return tabId
+
+    def save(self, table: GartmentTable):
         with Session(self.engine) as session:
             session.add(table)
 

@@ -27,3 +27,13 @@ class Packer:
         self._packer_max.pack()
         self._packer_gui.pack()
         self._packer_sky.pack()
+
+    def get_packer_max(self):
+        return self._packer_max
+
+    def get_packer_gui(self):
+        return self._packer_gui
+
+    def get_packer_sky(self):
+        return self._packer_sky
+
