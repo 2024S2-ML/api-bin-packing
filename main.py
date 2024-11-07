@@ -34,6 +34,13 @@ async def create_table(new_table: newTable):
 
     return json.dumps({"id": tableId})
 
+@app.get('/table/{table_id}')
+async def get_table(table_id: int):
+    tableService = GartmentTableService(engine)
+    table = tableService.get_table(table_id)
+
+    return Utils.mount_table_return(table)
+
 @app.post('/table/{table_id}/add')
 async def add_rect(table_id: int, add_shirt: addShirt):
 
