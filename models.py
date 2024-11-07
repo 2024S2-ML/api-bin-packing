@@ -25,8 +25,8 @@ class Shirt(Base):
     type: Mapped[str] = mapped_column(String(50))
     size: Mapped[str] = mapped_column(String(3)) # pp p m g gg
 
-    shirtRects: Mapped[List["ShirtRects"]] = relationship(
-        back_populates = "shirt", cascade = "all, delete-orphan"
+    shirt_rects: Mapped[List["ShirtRects"]] = relationship(
+        "ShirtRects", back_populates="shirt", cascade="all, delete-orphan"
     )
 
 class ShirtRects(Base):
@@ -37,4 +37,4 @@ class ShirtRects(Base):
     height: Mapped[int] = mapped_column(Integer)
     shirt_id: Mapped[str] = mapped_column(ForeignKey("shirt.id"))
 
-    shirt: Mapped["Shirt"] = relationship(Shirt, back_populates = "shirt_rects")
+    shirt: Mapped["Shirt"] = relationship("Shirt", back_populates="shirt_rects")

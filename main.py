@@ -1,7 +1,7 @@
 import json
 from io import BytesIO
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import Session
@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from starlette.responses import FileResponse, StreamingResponse
 
 from Utils import Utils
-from body_dto import newTable, addShirt
-from models import Base, GartmentTable
+from body_dto import newTable, addShirt, ShirtCreate
+from models import Base, GartmentTable, Shirt, ShirtRects
 from packing_layer import Packer
 from services import GartmentTableService, ShirtService, ShirtRectsService
 from temp_content import get_rects, plot_bin_packing
@@ -62,6 +62,36 @@ async def add_rect(table_id: int, add_shirt: addShirt):
         return Utils.mount_table_return(table)
 
     return json.dumps({"error": "Error during the addition"})
+
+
+@app.post("/shirts/", response_model=ShirtCreate)
+def create_shirt(shirt: ShirtCreate):
+
+    with Session(engine) as session:
+        db_shirt = Shirt(type=shirt.type, size=shirt.size)
+        session.add(db_shirt)
+        session.commit()
+        session.refresh(db_shirt)
+
+        for rect in shirt.shirt_rects:
+            db_rect = ShirtRects(width=rect.width, height=rect.height, shirt_id=db_shirt.id)
+            session.add(db_rect)
+        session.commit()
+
+    return db_shirt
+
+
+
+@app.delete("/shirts/{shirt_id}")
+def delete_shirt(shirt_id: int):
+    with Session(engine) as session:
+        db_shirt = session.query(Shirt).filter(Shirt.id == shirt_id).first()
+        if db_shirt is None:
+            raise HTTPException(status_code=404, detail="Shirt not found")
+        session.delete(db_shirt)
+        session.commit()
+
+    return {"message": "Shirt deleted successfully"}
 
 ## TEMP AREA
 @app.get('/pack')
