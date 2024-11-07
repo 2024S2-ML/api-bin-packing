@@ -1,9 +1,9 @@
 import uuid
-from datetime import time
+import time
+from operator import and_
 from typing import List, Tuple
 
-from select import select
-from sqlalchemy import Engine
+from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.util import tables_from_leftmost
 
@@ -34,6 +34,7 @@ class GartmentTableService:
             session.flush()
             tabId = table.id
             session.commit()
+            session.refresh(table)
 
             return tabId
 
@@ -60,7 +61,7 @@ class ShirtService:
         shirt: Shirt
 
         with Session(self.engine) as session:
-            stmt = select(Shirt).where(Shirt.size == size and Shirt.type == type)
+            stmt = select(Shirt).where(and_(Shirt.size == size, Shirt.type == type))
             shirt = session.execute(stmt).scalar()
 
             return shirt
@@ -87,7 +88,7 @@ class ShirtRectsService:
 
         with Session(self.engine) as session:
             stmt = select(ShirtRects).where(ShirtRects.shirt_id == shirt_id)
-            shirtRects = session.execute(stmt).scalar()
+            shirtRects = session.execute(stmt).scalars().all()
 
             return shirtRects
 
@@ -100,7 +101,7 @@ class ShirtRectsService:
         return result
 
 
-    def generate_uuid(rect_id: int, shirt_id: int) -> str:
+    def generate_uuid(self, rect_id: int, shirt_id: int) -> str:
         timestamp = str(int(time.time()))
         unique_string = f"{rect_id}{shirt_id}{timestamp}"
 

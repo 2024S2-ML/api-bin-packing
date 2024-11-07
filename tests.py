@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from body_dto import newTable
-from main import create_table
+from main import create_table, add_rect
 from models import GartmentTable
 
 class garmentTable(IsolatedAsyncioTestCase):
@@ -26,6 +26,17 @@ class garmentTable(IsolatedAsyncioTestCase):
             table = session.get(GartmentTable, id)
 
             self.assertEqual(id, table.id)
+
+    async def test_addShirt(self):
+        engine = create_engine("sqlite:///database.db", echo=True)
+
+        addStmt = type("", (), {})()
+        addStmt.size = "P"
+        addStmt.type = "P"
+
+        table = json.loads(await add_rect(1, addStmt))
+
+
 
 if __name__ == '__main__':
     unittest.main()

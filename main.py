@@ -44,7 +44,7 @@ async def add_rect(table_id: int, add_shirt: addShirt):
     shirt = shirtService.get_by_size_type(add_shirt.size, add_shirt.type)
 
     shirtRectsService = ShirtRectsService(engine)
-    shirtRects = shirtRectsService.get_by_shirtId(shirt.shirtId)
+    shirtRects = shirtRectsService.get_by_shirtId(shirt.id)
 
     if table is not None and shirt is not None and shirtRects is not None:
         rectsList = shirtRectsService.transform_into_rects(shirtRects)
