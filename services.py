@@ -107,20 +107,20 @@ class ShirtRectsService:
 
             return shirtRects
 
-    def transform_into_rects(self, shirtRects: List[ShirtRects]) -> List[Tuple[int, int, str]]:
+    def transform_into_rects(self, shirtRects: List[ShirtRects], random_id: int = 0) -> List[Tuple[int, int, str]]:
         result = []
         for rect in shirtRects:
-            unique_id = self.generate_uuid(rect.id, rect.shirt_id)
+            unique_id = self.generate_uuid(rect.id, rect.shirt_id, random_id)
             result.append((rect.width, rect.height, unique_id))
 
         return result
 
 
-    def generate_uuid(self, rect_id: int, shirt_id: int) -> str:
-        timestamp = str(int(time.time()))
-        unique_string = f"{rect_id}{shirt_id}{timestamp}"
-
-        return str(uuid.uuid5(uuid.NAMESPACE_DNS, unique_string))
+    def generate_uuid(self, rect_id: int, shirt_id: int, random_id: int = 0) -> str:
+        #timestamp = str(int(time.time()))
+        unique_string = f"{rect_id}.{shirt_id}.{random_id}"
+        #uu = uuid.uuid5(uuid.NAMESPACE_DNS, unique_string)
+        return str(unique_string)
 
 class PackerService:
     engine: Engine

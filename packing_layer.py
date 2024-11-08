@@ -1,18 +1,18 @@
-from rectpack import newPacker, PackingBin, PackingMode, GuillotineBlsfMinas, SkylineBl
+from rectpack import newPacker, PackingBin, PackingMode, GuillotineBlsfMinas, SkylineBl, PackerOnlineBBF, PackerGlobal
 from rectpack.geometry import Rectangle
-from rectpack.packer import Packer
+from rectpack import packer
 
 
 class Packer:
-    _packer_max: Packer
-    _packer_gui: Packer
-    _packer_sky: Packer
+    _packer_max: PackerGlobal
+    _packer_gui: PackerGlobal
+    _packer_sky: PackerGlobal
     bin = None
 
     def __init__(self, bin: (int, int) = None,
-                 packer_max = newPacker(mode=PackingMode.Offline, bin_algo=PackingBin.Global, rotation=False),
-                 packer_gui = newPacker(mode=PackingMode.Offline, bin_algo=PackingBin.Global, rotation=False, pack_algo=GuillotineBlsfMinas),
-                 packer_sky = newPacker(mode=PackingMode.Offline, bin_algo=PackingBin.Global, rotation=False, pack_algo=SkylineBl)
+                 packer_max = PackerGlobal(rotation=False),
+                 packer_gui = PackerGlobal(rotation=False, pack_algo=GuillotineBlsfMinas),
+                 packer_sky = PackerGlobal(rotation=False, pack_algo=SkylineBl)
              ):
 
         self._packer_max = packer_max
