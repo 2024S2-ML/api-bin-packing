@@ -1,4 +1,5 @@
 import json
+import pickle
 from io import BytesIO
 import uvicorn
 from fastapi import FastAPI, HTTPException
@@ -12,7 +13,7 @@ from Utils import Utils
 from body_dto import newTable, addShirt, ShirtCreate
 from models import Base, GartmentTable, Shirt, ShirtRects
 from packing_layer import Packer
-from services import GartmentTableService, ShirtService, ShirtRectsService
+from services import GartmentTableService, ShirtService, ShirtRectsService, PackerService
 from temp_content import get_rects, plot_bin_packing
 
 # iniciar DB
@@ -56,7 +57,16 @@ async def add_rect(table_id: int, add_shirt: addShirt):
     if table is not None and shirt is not None and shirtRects is not None:
         rectsList = shirtRectsService.transform_into_rects(shirtRects)
 
+
         pack = Packer((table.width, table.height))
+
+        packerService = PackerService(engine)
+
+        loaded_packer = None
+        if table.bin_maxrects is not None:
+            loaded_packer = packerService.get_by_tableId(table.id)
+            pack = packerService.get_packer_instance(loaded_packer)
+
         pack.add_many(rectsList)
         pack.pack()
 
@@ -66,9 +76,18 @@ async def add_rect(table_id: int, add_shirt: addShirt):
 
         tableService.save(table)
 
+        if loaded_packer is not None:
+            loaded_packer.state = pickle.dumps(pack)
+            packerService.save(loaded_packer)
+        else:
+            packerService.new(pack, table.id)
+
+
         return Utils.mount_table_return(table)
 
     return json.dumps({"error": "Error during the addition"})
+
+
 
 
 @app.post("/shirts/", response_model=ShirtCreate)

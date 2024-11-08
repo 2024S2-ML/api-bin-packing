@@ -1,3 +1,4 @@
+import pickle
 import uuid
 import time
 from operator import and_
@@ -8,7 +9,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.util import tables_from_leftmost
 
 from body_dto import newTable
-from models import GartmentTable, Shirt, ShirtRects
+from models import GartmentTable, Shirt, ShirtRects, PackerModel
+from packing_layer import Packer
 
 
 class GartmentTableService:
@@ -74,6 +76,7 @@ class ShirtService:
 
             return shirt
 
+
 class ShirtRectsService:
     engine: Engine
 
@@ -106,3 +109,34 @@ class ShirtRectsService:
         unique_string = f"{rect_id}{shirt_id}{timestamp}"
 
         return str(uuid.uuid5(uuid.NAMESPACE_DNS, unique_string))
+
+class PackerService:
+    engine: Engine
+
+    def __init__(self, engine: Engine):
+        self.engine = engine
+
+    def new(self, packer: Packer, tableId):
+        packer_model = PackerModel(packer)
+        packer_model.table_id = tableId
+
+        with Session(self.engine) as session:
+            session.add(packer_model)
+            session.commit()
+
+    def save(self, packer_model: PackerModel):
+        with Session(self.engine) as session:
+            session.add(packer_model)
+            session.commit()
+
+    def get_by_tableId(self, table_id: int) -> PackerModel:
+        packer: PackerModel
+
+        with Session(self.engine) as session:
+            stmt = select(PackerModel).where(PackerModel.table_id == table_id)
+            packer = session.execute(stmt).scalars().first()
+
+            return packer
+
+    def get_packer_instance(self, packer: PackerModel):
+        return pickle.loads(packer.state)
