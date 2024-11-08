@@ -1,9 +1,11 @@
+import json
 import pickle
 import uuid
 import time
 from operator import and_
 from typing import List, Tuple
 
+from matplotlib.font_manager import json_dump
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.util import tables_from_leftmost
@@ -48,6 +50,15 @@ class GartmentTableService:
             table = session.get(GartmentTable, tabId)
 
             return table
+
+    def update_table(self, packer: Packer, table: GartmentTable):
+        bin_max = json.dumps(table.bin_maxrects)
+        bin_skyline = json.dumps(table.bin_skyline)
+        bin_guillotine = json.dumps(table.bin_guillotine)
+
+        packer.get_packer_max()._avail_rect_rect = bin_max
+        packer.get_packer_sky()._avail_rect_rect = bin_skyline
+        packer.get_packer_gui()._avail_rect_rect = bin_guillotine
 
 
 class ShirtService:

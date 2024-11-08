@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
 from starlette.responses import FileResponse, StreamingResponse
 
@@ -22,6 +23,13 @@ engine = create_engine("sqlite:///database.db", echo=True)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def hello_world_root():
@@ -61,11 +69,9 @@ async def add_rect(table_id: int, add_shirt: addShirt):
         pack = Packer((table.width, table.height))
 
         packerService = PackerService(engine)
-
         loaded_packer = None
         if table.bin_maxrects is not None:
-            loaded_packer = packerService.get_by_tableId(table.id)
-            pack = packerService.get_packer_instance(loaded_packer)
+            tableService.update_table(pack, table)
 
         pack.add_many(rectsList)
         pack.pack()
@@ -76,11 +82,11 @@ async def add_rect(table_id: int, add_shirt: addShirt):
 
         tableService.save(table)
 
-        if loaded_packer is not None:
-            loaded_packer.state = pickle.dumps(pack)
-            packerService.save(loaded_packer)
-        else:
-            packerService.new(pack, table.id)
+        #if loaded_packer is not None:
+        #    loaded_packer.state = pickle.dumps(pack)
+        #    packerService.save(loaded_packer)
+        #else:
+        #    packerService.new(pack, table.id)
 
 
         return Utils.mount_table_return(table)
