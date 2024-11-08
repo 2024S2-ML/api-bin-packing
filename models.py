@@ -11,9 +11,9 @@ class GartmentTable(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     width: Mapped[int] = mapped_column(Integer)
     height: Mapped[int] = mapped_column(Integer)
-    bin_maxrects: Mapped[int] = mapped_column(String(400), nullable=True)
-    bin_skyline: Mapped[str] = mapped_column(String(400), nullable=True)
-    bin_guillotine: Mapped[str] = mapped_column(String(400), nullable=True)
+    bin_maxrects: Mapped[str] = mapped_column(String(1000), nullable=True)
+    bin_skyline: Mapped[str] = mapped_column(String(1000), nullable=True)
+    bin_guillotine: Mapped[str] = mapped_column(String(1000), nullable=True)
 
     packers: Mapped[List["PackerModel"]] = relationship(
         "PackerModel", back_populates="table", cascade="all, delete-orphan"

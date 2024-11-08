@@ -1,3 +1,4 @@
+import ast
 import json
 import pickle
 import uuid
@@ -52,13 +53,13 @@ class GartmentTableService:
             return table
 
     def update_table(self, packer: Packer, table: GartmentTable):
-        bin_max = json.dumps(table.bin_maxrects)
-        bin_skyline = json.dumps(table.bin_skyline)
-        bin_guillotine = json.dumps(table.bin_guillotine)
+        bin_max = ast.literal_eval(table.bin_maxrects)
+        bin_skyline = ast.literal_eval(table.bin_skyline)
+        bin_guillotine = ast.literal_eval(table.bin_guillotine)
 
-        packer.get_packer_max()._avail_rect_rect = bin_max
-        packer.get_packer_sky()._avail_rect_rect = bin_skyline
-        packer.get_packer_gui()._avail_rect_rect = bin_guillotine
+        packer.get_packer_max()._avail_rect = [item[-3:] for item in bin_max]
+        packer.get_packer_sky()._avail_rect = [item[-3:] for item in bin_skyline]
+        packer.get_packer_gui()._avail_rect = [item[-3:] for item in bin_guillotine]
 
 
 class ShirtService:
