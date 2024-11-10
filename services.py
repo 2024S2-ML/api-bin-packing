@@ -1,6 +1,6 @@
 import ast
 import json
-import pickle
+import dill
 import uuid
 import time
 from operator import and_
@@ -150,5 +150,20 @@ class PackerService:
 
             return packer
 
-    def get_packer_instance(self, packer: PackerModel):
-        return pickle.loads(packer.state)
+    @staticmethod
+    def get_packer_instance(packer: PackerModel) -> Packer:
+        packer_max = dill.loads(packer.state_max)
+        packer_sky = dill.loads(packer.state_sky)
+        packer_gui = dill.loads(packer.state_gui)
+
+        packer_return = Packer(packer_max=packer_max, packer_sky=packer_sky, packer_gui=packer_gui)
+
+        return packer_return
+
+    @staticmethod
+    def set_packer_instance(packer: Packer, packer_model: PackerModel) -> PackerModel:
+        packer_model.state_max = dill.dumps(packer._packer_sky)
+        packer_model.state_sky = dill.dumps(packer._packer_gui)
+        packer_model.state_gui = dill.dumps(packer._packer_max)
+
+        return packer_model

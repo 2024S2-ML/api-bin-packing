@@ -71,7 +71,9 @@ async def add_rect(table_id: int, add_shirt: addShirt):
         packerService = PackerService(engine)
         loaded_packer = None
         if table.bin_maxrects is not None:
-            tableService.update_table(pack, table)
+            #tableService.update_table(pack, table)
+            loaded_packer = packerService.get_by_tableId(table.id)
+            pack = packerService.get_packer_instance(loaded_packer)
 
         pack.add_many(rectsList)
         pack.pack()
@@ -82,11 +84,11 @@ async def add_rect(table_id: int, add_shirt: addShirt):
 
         tableService.save(table)
 
-        #if loaded_packer is not None:
-        #    loaded_packer.state = pickle.dumps(pack)
-        #    packerService.save(loaded_packer)
-        #else:
-        #    packerService.new(pack, table.id)
+        if loaded_packer is not None:
+            loaded_packer = packerService.set_packer_instance(pack, loaded_packer)
+            packerService.save(loaded_packer)
+        else:
+            packerService.new(pack, table.id)
 
 
         return Utils.mount_table_return(table)

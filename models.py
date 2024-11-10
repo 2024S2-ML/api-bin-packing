@@ -3,6 +3,9 @@ from typing import List
 from sqlalchemy import ForeignKey, Integer, LargeBinary, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
+from packing_layer import Packer
+import dill
+
 class Base(DeclarativeBase):
      pass
 
@@ -42,11 +45,15 @@ class ShirtRects(Base):
 class PackerModel(Base):
     __tablename__ = 'packers'
     id: Mapped[int] = mapped_column(primary_key=True)
-    state: Mapped[bytes] = mapped_column(LargeBinary)
+    state_max: Mapped[bytes] = mapped_column(LargeBinary)
+    state_sky: Mapped[bytes] = mapped_column(LargeBinary)
+    state_gui: Mapped[bytes] = mapped_column(LargeBinary)
     table_id: Mapped[int] = mapped_column(ForeignKey("gartment_table.id"))
 
     # Make sure this matches the relationship in GartmentTable
     table: Mapped["GartmentTable"] = relationship("GartmentTable", back_populates="packers")
 
-    def __init__(self, packer_instance):
-        self.state = pickle.dumps(packer_instance)
+    def __init__(self, packer_instance: Packer):
+        self.state_max = dill.dumps(packer_instance.get_packer_max())
+        self.state_sky = dill.dumps(packer_instance.get_packer_sky())
+        self.state_gui = dill.dumps(packer_instance.get_packer_gui())
