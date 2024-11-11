@@ -1,5 +1,5 @@
 import pickle
-from typing import List
+from typing import List, Tuple
 from sqlalchemy import ForeignKey, Integer, LargeBinary, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -14,13 +14,23 @@ class GartmentTable(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     width: Mapped[int] = mapped_column(Integer)
     height: Mapped[int] = mapped_column(Integer)
-    bin_maxrects: Mapped[str] = mapped_column(String(1000), nullable=True)
-    bin_skyline: Mapped[str] = mapped_column(String(1000), nullable=True)
-    bin_guillotine: Mapped[str] = mapped_column(String(1000), nullable=True)
+    bin_maxrects: Mapped[str] = mapped_column(String(5000), nullable=True)
+    bin_skyline: Mapped[str] = mapped_column(String(5000), nullable=True)
+    bin_guillotine: Mapped[str] = mapped_column(String(5000), nullable=True)
 
     packers: Mapped[List["PackerModel"]] = relationship(
         "PackerModel", back_populates="table", cascade="all, delete-orphan"
     )
+
+    # (bin_number,x, y, WIDTH, HEIGHT, ID)
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+        self.max_rects_array: List[Tuple[int, int, int, int, int, str]] = None
+        self.skyline_array: List[Tuple[int, int, int, int, int, str]] = None
+        self.guillotine_array: List[Tuple[int, int, int, int, int, str]] = None
+
 
 class Shirt(Base):
     __tablename__ = "shirt"

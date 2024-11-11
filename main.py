@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.sql.functions import random
 
 from starlette.responses import FileResponse, StreamingResponse
 
@@ -69,24 +70,16 @@ async def add_rect(table_id: int, add_shirt: addShirt):
         pack = Packer((table.width, table.height))
 
         packerService = PackerService(engine)
-        loaded_packer = None
         if table.bin_maxrects is not None:
-            #tableService.update_table(pack, table)
-            loaded_packer = packerService.get_by_tableId(table.id)
-            pack = packerService.get_packer_instance(loaded_packer)
+            pack = packerService.get_packer(table)
 
         pack.add_many(rectsList)
         pack.pack()
 
-        table.bin_skyline = pack.get_packer_sky().rect_list().__str__()
-        table.bin_guillotine = pack.get_packer_gui().rect_list().__str__()
-        table.bin_maxrects = pack.get_packer_max().rect_list().__str__()
+        tableService.save(table, pack)
 
-        tableService.save(table)
-
-        if loaded_packer is not None:
-            loaded_packer = packerService.set_packer_instance(pack, loaded_packer)
-            packerService.save(loaded_packer)
+        if packerService.loaded_packer is not None:
+            packerService.save(pack)
         else:
             packerService.new(pack, table.id)
 
@@ -94,6 +87,16 @@ async def add_rect(table_id: int, add_shirt: addShirt):
         return Utils.mount_table_return(table)
 
     return json.dumps({"error": "Error during the addition"})
+
+@app.post('/table/{table_id}/remove/{shirt_id}')
+async def remove_shirt(table_id: int, shirt_id: int):
+    tableService = GartmentTableService(engine)
+    table = tableService.remove_shirt(table_id, shirt_id)
+
+    if table is not None:
+        return Utils.mount_table_return(table)
+    else:
+        return json.dumps({"error": "Error during the removal"})
 
 
 

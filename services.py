@@ -32,7 +32,13 @@ class GartmentTableService:
 
         return tabId
 
-    def save(self, table: GartmentTable):
+    def save(self, table: GartmentTable, pack: Packer = None):
+
+        if pack is not None:
+            table.bin_skyline = pack.get_packer_sky().rect_list().__str__()
+            table.bin_guillotine = pack.get_packer_gui().rect_list().__str__()
+            table.bin_maxrects = pack.get_packer_max().rect_list().__str__()
+
         with Session(self.engine) as session:
             session.add(table)
 
@@ -50,16 +56,51 @@ class GartmentTableService:
         with Session(self.engine) as session:
             table = session.get(GartmentTable, tabId)
 
+            if table is not None:
+                self.table_array_transform(table)
+
             return table
 
-    def update_table(self, packer: Packer, table: GartmentTable):
-        bin_max = ast.literal_eval(table.bin_maxrects)
-        bin_skyline = ast.literal_eval(table.bin_skyline)
-        bin_guillotine = ast.literal_eval(table.bin_guillotine)
+    def remove_shirt(self, table_id: int, random_shirt_id: int):
+        table = self.get_table(table_id)
 
-        packer.get_packer_max()._avail_rect = [item[-3:] for item in bin_max]
-        packer.get_packer_sky()._avail_rect = [item[-3:] for item in bin_skyline]
-        packer.get_packer_gui()._avail_rect = [item[-3:] for item in bin_guillotine]
+        GartmentTableService.table_array_transform(table)
+        GartmentTableService.remove_rect(table, random_shirt_id)
+
+        pack = Packer(bin=(table.width, table.height))
+
+        self.update_packer(pack, table)
+
+        pack.pack()
+        packer_service = PackerService(self.engine, table.id)
+        packer_service.save(pack)
+
+        self.save(table, pack)
+
+        return table
+
+
+    @staticmethod
+    def remove_rect(table: GartmentTable, random_shirt_id: int):
+        table.max_rects_array = [item for item in table.max_rects_array if random_shirt_id.__str__() not in item[-1]]
+        table.skyline_array = [item for item in table.skyline_array if random_shirt_id.__str__() not in item[-1]]
+        table.guillotine_array = [item for item in table.guillotine_array if random_shirt_id.__str__() not in item[-1]]
+
+    @staticmethod
+    def table_array_transform(table: GartmentTable):
+        if table.bin_maxrects is not None:
+            table.max_rects_array = ast.literal_eval(table.bin_maxrects)
+        if table.bin_skyline is not None:
+            table.skyline_array = ast.literal_eval(table.bin_skyline)
+        if table.bin_guillotine is not None:
+            table.guillotine_array = ast.literal_eval(table.bin_guillotine)
+
+    @staticmethod
+    def update_packer(packer: Packer, table: GartmentTable):
+        packer.get_packer_max()._avail_rect = [item[-3:] for item in table.max_rects_array]
+        packer.get_packer_sky()._avail_rect = [item[-3:] for item in table.skyline_array]
+        packer.get_packer_gui()._avail_rect = [item[-3:] for item in table.guillotine_array]
+
 
 
 class ShirtService:
@@ -107,7 +148,7 @@ class ShirtRectsService:
 
             return shirtRects
 
-    def transform_into_rects(self, shirtRects: List[ShirtRects], random_id: int = 0) -> List[Tuple[int, int, str]]:
+    def transform_into_rects(self, shirtRects: List[ShirtRects], random_id: int = uuid.uuid4().int >> 32) -> List[Tuple[int, int, str]]:
         result = []
         for rect in shirtRects:
             unique_id = self.generate_uuid(rect.id, rect.shirt_id, random_id)
@@ -124,9 +165,13 @@ class ShirtRectsService:
 
 class PackerService:
     engine: Engine
+    loaded_packer: PackerModel = None
 
-    def __init__(self, engine: Engine):
+    def __init__(self, engine: Engine, tableId: int = None):
         self.engine = engine
+
+        if tableId is not None:
+            self.loaded_packer = self.get_by_tableId(tableId)
 
     def new(self, packer: Packer, tableId):
         packer_model = PackerModel(packer)
@@ -136,9 +181,11 @@ class PackerService:
             session.add(packer_model)
             session.commit()
 
-    def save(self, packer_model: PackerModel):
+    def save(self, packer: Packer):
+        self.set_packer_instance(packer, self.loaded_packer)
+
         with Session(self.engine) as session:
-            session.add(packer_model)
+            session.add(self.loaded_packer)
             session.commit()
 
     def get_by_tableId(self, table_id: int) -> PackerModel:
@@ -147,8 +194,15 @@ class PackerService:
         with Session(self.engine) as session:
             stmt = select(PackerModel).where(PackerModel.table_id == table_id)
             packer = session.execute(stmt).scalars().first()
+            self.loaded_packer = packer
 
             return packer
+
+    def get_packer(self, table):
+        self.loaded_packer = self.get_by_tableId(table.id)
+        pack = self.get_packer_instance(self.loaded_packer)
+
+        return pack
 
     @staticmethod
     def get_packer_instance(packer: PackerModel) -> Packer:
